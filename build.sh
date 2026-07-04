@@ -2,8 +2,8 @@
 
 ROM_BRANCH="15.2"
 DEVICE="zahedan"
+MANIFEST_URL="https://github.com/DerpFest-LOS/android_manifest.git"
 LOCAL_MANIFEST_URL="https://github.com/ramon-pid/zahedan-local-manifests.git"
-LOCAL_MANIFEST_URL="https://github.com/ramon-pid/derpfest-zahedan-build.git"
 
 rm -rf .repo/local_manifests
 rm -rf {device,vendor,kernel}/daria
@@ -12,8 +12,6 @@ rm -rf {device,hardware}/mediatek
 repo init -u ${MANIFEST_URL} -b ${ROM_BRANCH} --git-lfs --no-clone-bundle
 
 git clone ${LOCAL_MANIFEST_URL} .repo/local_manifests
-rm -f .repo/local_manifests/build.sh
-rm -rf .repo/local_manifests/.git
 
 /opt/crave/resync.sh
 
