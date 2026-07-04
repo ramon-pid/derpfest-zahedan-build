@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 ROM_BRANCH="15.2"
 DEVICE="zahedan"
@@ -28,7 +28,11 @@ echo "==> Apply Soong patch"
 cd build/soong
 wget -O 0001-soong-HACK-disable-soong_filesystem_creator.patch \
   https://raw.githubusercontent.com/sajjad85gh/build-custom-rom/main/0001-soong-HACK-disable-soong_filesystem_creator.patch
-git am 0001-soong-HACK-disable-soong_filesystem_creator.patch || true
+
+if ! git am 0001-soong-HACK-disable-soong_filesystem_creator.patch; then
+    echo "Patch already applied, skipping..."
+    git am --abort >/dev/null 2>&1 || true
+fi
 cd -
 
 echo "==> Export build identity"
@@ -38,6 +42,6 @@ export BUILD_HOSTNAME=crave
 echo "==> Build"
 . build/envsetup.sh
 
-lunch derp_${DEVICE}-bp1a-userdebug || lunch lineage_${DEVICE}-bp1a-userdebug
+lunch lineage_${DEVICE}-bp1a-userdebug
 
-m bacon -j$(nproc)
+mka derp -j$(nproc)
