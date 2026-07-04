@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 ROM_BRANCH="15.2"
 DEVICE="zahedan"
@@ -18,7 +19,10 @@ git clone ${LOCAL_MANIFEST_URL} .repo/local_manifests
 cd build/soong
 wget -O 0001-soong-HACK-disable-soong_filesystem_creator.patch \
   https://raw.githubusercontent.com/sajjad85gh/build-custom-rom/main/0001-soong-HACK-disable-soong_filesystem_creator.patch
-git am 0001-soong-HACK-disable-soong_filesystem_creator.patch || true
+
+git am 0001-soong-HACK-disable-soong_filesystem_creator.patch || {
+    git am --abort || true
+}
 cd -
 
 export BUILD_USERNAME=ramon
