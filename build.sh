@@ -29,7 +29,6 @@ export BUILD_USERNAME=ramon
 export BUILD_HOSTNAME=crave
 
 . build/envsetup.sh
-lunch lineage_${DEVICE}-bp1a-user
+lunch lineage_${DEVICE}-bp1a-userdebug
 
-make installclean
-mka derp
+m bacon
