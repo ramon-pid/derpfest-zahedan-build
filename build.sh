@@ -6,22 +6,30 @@ DEVICE="zahedan"
 MANIFEST_URL="https://github.com/DerpFest-LOS/android_manifest.git"
 LOCAL_MANIFEST_URL="https://github.com/ramon-pid/zahedan-local-manifests.git"
 
-echo "Cleaning old workspace files..."
-find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+rm -rf .repo/local_manifests
+rm -rf device/daria
+rm -rf vendor/daria
+rm -rf kernel/daria
+rm -rf device/mediatek
+rm -rf hardware/mediatek
 
-echo "Initializing DerpFest source..."
 repo init -u "${MANIFEST_URL}" -b "${ROM_BRANCH}" --git-lfs --no-clone-bundle
 
-echo "Cloning local manifests..."
 git clone "${LOCAL_MANIFEST_URL}" .repo/local_manifests
 
-echo "Syncing source..."
 /opt/crave/resync.sh
+
+cd build/soong
+wget -O 0001-soong-HACK-disable-soong_filesystem_creator.patch \
+  https://raw.githubusercontent.com/sajjad85gh/build-custom-rom/main/0001-soong-HACK-disable-soong_filesystem_creator.patch
+git am 0001-soong-HACK-disable-soong_filesystem_creator.patch || true
+cd -
 
 export BUILD_USERNAME=ramon
 export BUILD_HOSTNAME=crave
 
-echo "Starting build..."
 . build/envsetup.sh
 lunch lineage_${DEVICE}-bp1a-user
+
+make installclean
 mka derp
