@@ -25,6 +25,21 @@ wget -O 0001-soong-HACK-disable-soong_filesystem_creator.patch \
 git am 0001-soong-HACK-disable-soong_filesystem_creator.patch || true
 cd -
 
+
+# Fix DerpFest recursive build type issue
+ZAHD_MK="$(find device/daria -path '*/lineage_zahedan.mk' | head -n1)"
+if [ -z "$ZAHD_MK" ]; then
+  echo "ERROR: lineage_zahedan.mk not found under device/daria"
+  find device/daria -maxdepth 4 -type f | sort || true
+  exit 1
+fi
+
+echo "Using product makefile: $ZAHD_MK"
+grep -q '^DERPFEST_BUILD_TYPE[[:space:]]*:=' "$ZAHD_MK" || \
+  sed -i '1iDERPFEST_BUILD_TYPE := COMMUNITY' "$ZAHD_MK"
+
+grep -n 'DERPFEST_BUILD_TYPE' "$ZAHD_MK"
+
 export BUILD_USERNAME=ramon
 export BUILD_HOSTNAME=crave
 
