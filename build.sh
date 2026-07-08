@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -Eeuo pipefail
+set -Ee -o pipefail
 
 ROM_BRANCH="15.2"
 DEVICE="zahedan"
@@ -61,18 +61,27 @@ fi
 
 ls -la device/daria
 
+echo "Finding product makefiles..."
+find device/daria -name "lineage_zahedan.mk" -o -name "*zahedan*.mk"
+
 echo "Patch DERPFEST_BUILD_TYPE..."
-for f in device/daria/zahedan-unified/lineage_zahedan.mk device/daria/zahedan/lineage_zahedan.mk; do
-  if [[ -f "$f" ]]; then
-    if grep -q '^DERPFEST_BUILD_TYPE[[:space:]]*:=' "$f"; then
-      sed -i 's/^DERPFEST_BUILD_TYPE[[:space:]]*:=.*/DERPFEST_BUILD_TYPE := COMMUNITY/' "$f"
-    else
-      sed -i '1iDERPFEST_BUILD_TYPE := COMMUNITY' "$f"
-    fi
-    echo "Patched: $f"
-    grep -n 'DERPFEST_BUILD_TYPE' "$f"
-  fi
-done
+ZAHD_MK="$(find device/daria -name 'lineage_zahedan.mk' | head -n1)"
+
+if [[ -z "${ZAHD_MK}" ]]; then
+  echo "ERROR: lineage_zahedan.mk not found"
+  find device/daria -maxdepth 5 -type f | sort
+  exit 1
+fi
+
+echo "Using product makefile: ${ZAHD_MK}"
+
+if grep -q '^DERPFEST_BUILD_TYPE[[:space:]]*:=' "${ZAHD_MK}"; then
+  sed -i 's/^DERPFEST_BUILD_TYPE[[:space:]]*:=.*/DERPFEST_BUILD_TYPE := COMMUNITY/' "${ZAHD_MK}"
+else
+  sed -i '1iDERPFEST_BUILD_TYPE := COMMUNITY' "${ZAHD_MK}"
+fi
+
+grep -n 'DERPFEST_BUILD_TYPE' "${ZAHD_MK}"
 
 echo "Patch Soong..."
 cd build/soong
@@ -84,14 +93,18 @@ cd -
 
 export BUILD_USERNAME=ramon
 export BUILD_HOSTNAME=crave
-export DERPFEST_BUILD_TYPE=COMMUNITY
 export USE_CCACHE=0
 
 echo "Build envsetup..."
 . build/envsetup.sh
 
 echo "Lunch target..."
-lunch lineage_${DEVICE}-bp1a-userdebug
+if lunch lineage_${DEVICE}-bp1a-userdebug; then
+  echo "Lunch OK: lineage_${DEVICE}-bp1a-userdebug"
+else
+  echo "Fallback lunch: lineage_${DEVICE}-userdebug"
+  lunch lineage_${DEVICE}-userdebug
+fi
 
 echo "Start build..."
 m bacon
